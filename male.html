@@ -1,0 +1,156 @@
+      try {
+        const [dormRows, recordRows] = await Promise.all([
+          db("dorms?select=*&order=name.asc"),
+          db("records?select=*&order=created_at.asc")
+        ]);
+
+        state = {
+          dorms: dormRows.map(mapDorm),
+          records: recordRows.map(mapRecord)
+        };
+
+        render();
+        setSyncStatus(`已连接在线数据库 · ${formatSyncTime(new Date())}`);
+      } catch (error) {
+        handleError(error);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    async function db(path, options = {}) {
+      const response = await fetch(`${getSupabaseBaseUrl()}/rest/v1/${path}`, {
+        ...options,
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+          ...(options.headers || {})
+        }
+      });
+      return parseResponse(response);
+    }
+
+    async function rpc(functionName, body) {
+      const response = await fetch(`${getSupabaseBaseUrl()}/rest/v1/rpc/${functionName}`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+      return parseResponse(response);
+    }
+
+    async function parseResponse(response) {
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+      if (!response.ok) {
+        const message = data?.message || data?.hint || `数据库请求失败：${response.status}`;
+        throw new Error(message);
+      }
+      return data;
+    }
+
+    function mapDorm(row) {
+      return {
+        id: row.id,
+        name: row.name,
+        gender: row.gender,
+        capacity: Number(row.capacity)
+      };
+    }
+
+    function mapRecord(row) {
+      return {
+        id: row.id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        name: row.name,
+        gender: row.gender,
+        studentId: row.student_id,
+        dormId: row.dorm_id,
+        note: ""
+      };
+    }
+
+    function isSupabaseConfigured() {
+      return getSupabaseBaseUrl().startsWith("https://") &&
+        !getSupabaseBaseUrl().includes("YOUR-PROJECT") &&
+        SUPABASE_ANON_KEY &&
+        SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
+    }
+
+    function getSupabaseBaseUrl() {
+      return SUPABASE_URL
+        .trim()
+        .replace(/\/rest\/v1\/?$/i, "")
+        .replace(/\/+$/, "");
+    }
+
+    function ensureConfigured() {
+      if (isSupabaseConfigured()) return true;
+      showToast("请先在 index.html 里填写 Supabase 配置。");
+      setSyncStatus("未配置在线数据库，当前只是预览界面。");
+      return false;
+    }
+
+    function setSyncStatus(message) {
+      els.syncStatus.textContent = message;
+    }
+
+    function handleError(error) {
+      console.error(error);
+      showToast(error.message || "操作失败，请稍后重试。");
+      setSyncStatus("同步失败，请检查数据库配置或网络。");
+    }
+
+    function normalize(value) {
+      return String(value).trim().toLowerCase();
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatTime(value) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date(value));
+    }
+
+    function formatSyncTime(value) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(value);
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2200);
+    }
+
+    window.chooseDorm = chooseDorm;
+
+    refreshData();
+    setInterval(() => refreshData({ silent: true }), REFRESH_INTERVAL_MS);
+  </script>
+</body>
+</html>
