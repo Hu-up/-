@@ -1,156 +1,250 @@
-      try {
-        const [dormRows, recordRows] = await Promise.all([
-          db("dorms?select=*&order=name.asc"),
-          db("records?select=*&order=created_at.asc")
-        ]);
-
-        state = {
-          dorms: dormRows.map(mapDorm),
-          records: recordRows.map(mapRecord)
-        };
-
-        render();
-        setSyncStatus(`已连接在线数据库 · ${formatSyncTime(new Date())}`);
-      } catch (error) {
-        handleError(error);
-      } finally {
-        isRefreshing = false;
-      }
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>男生宿舍选择</title>
+  <style>
+    :root {
+      --bg: #edf5ff;
+      --panel: #ffffff;
+      --ink: #10223f;
+      --muted: #617491;
+      --line: #c9dcf2;
+      --blue: #1d64d8;
+      --blue-deep: #0f3f91;
+      --blue-soft: #e4f0ff;
+      --green: #16803c;
+      --green-soft: #e7f6ec;
+      --red: #b42318;
+      --red-soft: #fdecec;
+      --amber: #946200;
+      --amber-soft: #fff4d6;
+      --shadow: 0 12px 32px rgba(29, 36, 51, .08);
     }
 
-    async function db(path, options = {}) {
-      const response = await fetch(`${getSupabaseBaseUrl()}/rest/v1/${path}`, {
-        ...options,
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-          ...(options.headers || {})
-        }
-      });
-      return parseResponse(response);
+    * {
+      box-sizing: border-box;
     }
 
-    async function rpc(functionName, body) {
-      const response = await fetch(`${getSupabaseBaseUrl()}/rest/v1/rpc/${functionName}`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
-      return parseResponse(response);
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
     }
 
-    async function parseResponse(response) {
-      const text = await response.text();
-      const data = text ? JSON.parse(text) : null;
-      if (!response.ok) {
-        const message = data?.message || data?.hint || `数据库请求失败：${response.status}`;
-        throw new Error(message);
-      }
-      return data;
+    button, input, select, textarea {
+      font: inherit;
     }
 
-    function mapDorm(row) {
-      return {
-        id: row.id,
-        name: row.name,
-        gender: row.gender,
-        capacity: Number(row.capacity)
-      };
+    button {
+      border: 0;
+      cursor: pointer;
     }
 
-    function mapRecord(row) {
-      return {
-        id: row.id,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        name: row.name,
-        gender: row.gender,
-        studentId: row.student_id,
-        dormId: row.dorm_id,
-        note: ""
-      };
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
     }
 
-    function isSupabaseConfigured() {
-      return getSupabaseBaseUrl().startsWith("https://") &&
-        !getSupabaseBaseUrl().includes("YOUR-PROJECT") &&
-        SUPABASE_ANON_KEY &&
-        SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px;
+      background: #0f3f91;
+      color: #f8fafc;
+      overflow-y: auto;
     }
 
-    function getSupabaseBaseUrl() {
-      return SUPABASE_URL
-        .trim()
-        .replace(/\/rest\/v1\/?$/i, "")
-        .replace(/\/+$/, "");
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
     }
 
-    function ensureConfigured() {
-      if (isSupabaseConfigured()) return true;
-      showToast("请先在 index.html 里填写 Supabase 配置。");
-      setSyncStatus("未配置在线数据库，当前只是预览界面。");
-      return false;
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--blue-deep);
+      font-weight: 800;
     }
 
-    function setSyncStatus(message) {
-      els.syncStatus.textContent = message;
+    h1, h2, h3, p {
+      margin-top: 0;
     }
 
-    function handleError(error) {
-      console.error(error);
-      showToast(error.message || "操作失败，请稍后重试。");
-      setSyncStatus("同步失败，请检查数据库配置或网络。");
+    h1 {
+      margin-bottom: 2px;
+      font-size: 22px;
+      letter-spacing: 0;
     }
 
-    function normalize(value) {
-      return String(value).trim().toLowerCase();
+    .subtitle {
+      margin: 0;
+      color: #cfe2ff;
+      font-size: 14px;
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    nav {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 28px;
     }
 
-    function formatTime(value) {
-      return new Intl.DateTimeFormat("zh-CN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      }).format(new Date(value));
+    .nav-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: transparent;
+      color: #e6f0ff;
+      text-decoration: none;
+      text-align: left;
     }
 
-    function formatSyncTime(value) {
-      return new Intl.DateTimeFormat("zh-CN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      }).format(value);
+    .nav-button.active {
+      background: #ffffff;
+      color: var(--blue-deep);
+      font-weight: 800;
     }
 
-    let toastTimer;
-    function showToast(message) {
-      els.toast.textContent = message;
-      els.toast.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2200);
+    .nav-button.active {
+      box-shadow: inset 4px 0 0 #80b7ff;
     }
 
-    window.chooseDorm = chooseDorm;
+    .nav-button:not(.active):hover {
+      background: rgba(255, 255, 255, .12);
+      color: #ffffff;
+    }
 
-    refreshData();
-    setInterval(() => refreshData({ silent: true }), REFRESH_INTERVAL_MS);
-  </script>
-</body>
-</html>
+    .side-card {
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .side-card strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .side-card p {
+      margin-bottom: 0;
+      color: #c6d1e2;
+      font-size: 14px;
+    }
+
+    .sync-status {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .1);
+      color: #e6f0ff;
+      font-size: 13px;
+    }
+
+    main {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .topbar h2 {
+      margin-bottom: 4px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #ffffff;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .button.secondary {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .button.danger {
+      background: var(--red);
+    }
+
+    .button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 18px;
