@@ -1,3 +1,803 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>女生宿舍选择</title>
+  <style>
+    :root {
+      --bg: #edf5ff;
+      --panel: #ffffff;
+      --ink: #10223f;
+      --muted: #617491;
+      --line: #c9dcf2;
+      --blue: #1d64d8;
+      --blue-deep: #0f3f91;
+      --blue-soft: #e4f0ff;
+      --green: #16803c;
+      --green-soft: #e7f6ec;
+      --red: #b42318;
+      --red-soft: #fdecec;
+      --amber: #946200;
+      --amber-soft: #fff4d6;
+      --shadow: 0 12px 32px rgba(29, 36, 51, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px;
+      background: #0f3f91;
+      color: #f8fafc;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--blue-deep);
+      font-weight: 800;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 2px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #cfe2ff;
+      font-size: 14px;
+    }
+
+    nav {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .nav-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: transparent;
+      color: #e6f0ff;
+      text-decoration: none;
+      text-align: left;
+    }
+
+    .nav-button.active {
+      background: #ffffff;
+      color: var(--blue-deep);
+      font-weight: 800;
+    }
+
+    .nav-button.active {
+      box-shadow: inset 4px 0 0 #80b7ff;
+    }
+
+    .nav-button:not(.active):hover {
+      background: rgba(255, 255, 255, .12);
+      color: #ffffff;
+    }
+
+    .side-card {
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .side-card strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .side-card p {
+      margin-bottom: 0;
+      color: #c6d1e2;
+      font-size: 14px;
+    }
+
+    .sync-status {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .1);
+      color: #e6f0ff;
+      font-size: 13px;
+    }
+
+    main {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .topbar h2 {
+      margin-bottom: 4px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #ffffff;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .button.secondary {
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    .button.danger {
+      background: var(--red);
+    }
+
+    .button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      padding: 18px 18px 0;
+    }
+
+    .panel-head h3 {
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+
+    .panel-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 13px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 40px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    }
+
+    .two {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dorm-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .dorm-card {
+      width: 100%;
+      min-height: 176px;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      align-content: start;
+      text-align: left;
+      box-shadow: 0 8px 22px rgba(29, 100, 216, .08);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .dorm-card:not(:disabled):hover {
+      border-color: var(--blue);
+      box-shadow: 0 14px 30px rgba(29, 100, 216, .18);
+      transform: translateY(-2px);
+    }
+
+    .dorm-card.full {
+      background: #f8fafc;
+      color: #7b8493;
+      cursor: not-allowed;
+      opacity: .76;
+    }
+
+    .dorm-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .dorm-title {
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .tag.green {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .tag.red {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+
+    .tag.amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .progress {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #edf1f5;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--blue);
+    }
+
+    .people {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .people strong {
+      color: var(--ink);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    .empty {
+      padding: 34px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .notice {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: var(--amber-soft);
+      color: #5f4300;
+      font-size: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5;
+      max-width: min(420px, calc(100vw - 36px));
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #111827;
+      color: #ffffff;
+      box-shadow: var(--shadow);
+      transform: translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 960px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+        height: auto;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      main {
+        padding: 18px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .actions {
+        justify-content: flex-start;
+      }
+
+      .stats,
+      .two {
+        grid-template-columns: 1fr;
+      }
+
+      .dorm-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside>
+      <div class="brand">
+        <div class="brand-mark">宿</div>
+        <div>
+          <h1>女生宿舍</h1>
+          <p class="subtitle">学生填写页</p>
+        </div>
+      </div>
+
+      <nav aria-label="页面切换">
+        <a class="nav-button" href="male.html">男生宿舍入口</a>
+        <a class="nav-button active" href="female.html">女生宿舍</a>
+      </nav>
+
+      <div class="side-card">
+        <strong>选择方式</strong>
+        <p>先填写姓名和联系方式，再直接点击想选的宿舍。满员宿舍会自动锁定。</p>
+      </div>
+      <div class="sync-status" id="syncStatus">正在连接在线数据库...</div>
+    </aside>
+
+    <main>
+      <section id="view-choose">
+        <div class="topbar">
+          <div>
+            <h2 id="chooseTitle">女生宿舍</h2>
+            <p id="chooseHint">填写个人信息后，直接点击一个有空床位的女生宿舍。</p>
+          </div>
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="grid">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>提交选择</h3>
+              <p>每个姓名和联系方式组合只能保留一条记录。</p>
+            </div>
+            <div class="panel-body">
+              <form class="form-grid" id="choiceForm">
+                <label>
+                  姓名
+                  <input id="studentName" autocomplete="name" required placeholder="例如：张三">
+                </label>
+                <div class="two">
+                  <label>
+                    性别
+                    <select id="studentGender" required disabled>
+                      <option value="男">男</option>
+                      <option value="女" selected>女</option>
+                    </select>
+                  </label>
+                  <label>
+                    联系方式或学号
+                    <input id="studentId" required placeholder="用于避免重复提交">
+                  </label>
+                </div>
+                <div class="notice">填完个人信息后，在右侧点击宿舍卡片即可提交或更新选择。</div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3 id="dormListTitle">女生宿舍余量</h3>
+              <p>可点击的宿舍表示仍有空床位。</p>
+            </div>
+            <div class="panel-body">
+              <div class="dorm-list" id="dormList"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const SUPABASE_URL = "https://kzyxwnvjhojzayregxgc.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_SEzzFIpvvaq8fLvtphWf4A_8pnzVdQM";
+    const REFRESH_INTERVAL_MS = 5000;
+
+    const defaultDorms = [
+      ...Array.from({ length: 15 }, (_, index) => ({
+        id: `m-${index + 1}`,
+        name: `男生 ${String(index + 1).padStart(2, "0")} 宿舍`,
+        gender: "男",
+        capacity: 4
+      })),
+      ...Array.from({ length: 10 }, (_, index) => ({
+        id: `f-${index + 1}`,
+        name: `女生 ${String(index + 1).padStart(2, "0")} 宿舍`,
+        gender: "女",
+        capacity: 4
+      }))
+    ];
+
+    let state = { dorms: [], records: [] };
+    const fixedGender = "女";
+    let activeGender = fixedGender;
+    let isRefreshing = false;
+
+    const views = {
+      choose: document.querySelector("#view-choose")
+    };
+
+    const els = {
+      stats: document.querySelector("#stats"),
+      dormList: document.querySelector("#dormList"),
+      toast: document.querySelector("#toast"),
+      syncStatus: document.querySelector("#syncStatus"),
+      chooseTitle: document.querySelector("#chooseTitle"),
+      chooseHint: document.querySelector("#chooseHint"),
+      dormListTitle: document.querySelector("#dormListTitle")
+    };
+
+    document.querySelectorAll("button.nav-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".nav-button").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        Object.values(views).forEach((view) => view.classList.add("hidden"));
+        views[button.dataset.view].classList.remove("hidden");
+        if (button.dataset.gender) {
+          activeGender = button.dataset.gender;
+          document.querySelector("#studentGender").value = activeGender;
+          renderChoosePageText();
+          renderDormList();
+        }
+      });
+    });
+
+    document.querySelector("#choiceForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      showToast("请直接点击右侧宿舍卡片完成选择。");
+    });
+
+    function render() {
+      renderStats();
+      renderChoosePageText();
+      renderDormList();
+    }
+
+    function renderStats() {
+      const totalBeds = state.dorms.reduce((sum, dorm) => sum + Number(dorm.capacity), 0);
+      const usedBeds = state.records.length;
+      const maleRecords = state.records.filter((item) => item.gender === "男").length;
+      const femaleRecords = state.records.filter((item) => item.gender === "女").length;
+      const stats = [
+        ["总床位", totalBeds],
+        ["剩余床位", Math.max(totalBeds - usedBeds, 0)],
+        ["男生已选", `${maleRecords} / 60`],
+        ["女生已选", `${femaleRecords} / 40`]
+      ];
+
+      els.stats.innerHTML = stats.map(([label, value]) => `
+        <div class="stat">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderChoosePageText() {
+      activeGender = fixedGender;
+      document.querySelector("#studentGender").value = fixedGender;
+      els.chooseTitle.textContent = `${activeGender}生宿舍`;
+      els.chooseHint.textContent = `填写个人信息后，直接点击一个有空床位的${activeGender}生宿舍。`;
+      els.dormListTitle.textContent = `${activeGender}生宿舍余量`;
+    }
+
+    function renderDormList() {
+      const dorms = state.dorms.filter((dorm) => dorm.gender === activeGender);
+
+      if (!dorms.length) {
+        els.dormList.innerHTML = `<div class="empty">还没有可选宿舍，请联系管理员添加。</div>`;
+        return;
+      }
+
+      els.dormList.innerHTML = dorms.map((dorm) => {
+        const people = state.records.filter((record) => record.dormId === dorm.id);
+        const occupied = people.length;
+        const remaining = dorm.capacity - occupied;
+        const percent = Math.min(100, Math.round((occupied / dorm.capacity) * 100));
+        const statusClass = remaining <= 0 ? "red" : remaining <= 1 ? "amber" : "green";
+        const statusText = remaining <= 0 ? "已满" : `剩余 ${remaining}`;
+        const names = people.length ? people.map((item) => item.name).join("、") : "暂无选择";
+        const disabled = remaining <= 0 ? "disabled" : "";
+
+        return `
+          <button class="dorm-card ${remaining <= 0 ? "full" : ""}" type="button" onclick="chooseDorm('${dorm.id}')" ${disabled}>
+            <div class="dorm-top">
+              <div>
+                <div class="dorm-title">${escapeHtml(dorm.name)}</div>
+                <div class="people">${dorm.gender}生宿舍 · ${occupied}/${dorm.capacity}</div>
+              </div>
+              <span class="tag ${statusClass}">${statusText}</span>
+            </div>
+            <div class="progress" aria-hidden="true"><span style="width:${percent}%"></span></div>
+            <div class="people"><strong>已选：</strong>${escapeHtml(names)}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    async function chooseDorm(dormId) {
+      if (!ensureConfigured()) return;
+      const form = document.querySelector("#choiceForm");
+      if (!form.reportValidity()) return;
+
+      const name = document.querySelector("#studentName").value.trim();
+      const gender = activeGender;
+      const studentId = document.querySelector("#studentId").value.trim();
+      const dorm = state.dorms.find((item) => item.id === dormId);
+
+      if (!dorm) {
+        showToast("没有找到这个宿舍。");
+        return;
+      }
+
+      if (dorm.gender !== gender) {
+        showToast("请在对应性别页面选择宿舍。");
+        return;
+      }
+
+      try {
+        const result = await rpc("choose_dorm", {
+          p_name: name,
+          p_gender: gender,
+          p_student_id: studentId,
+          p_dorm_id: dormId
+        });
+
+        if (result.status === "full") {
+          showToast("这个宿舍刚刚满员了，请选择其他宿舍。");
+          await refreshData();
+          return;
+        }
+
+        if (result.status === "gender_mismatch") {
+          showToast("请在对应性别页面选择宿舍。");
+          await refreshData();
+          return;
+        }
+
+        showToast(result.status === "updated" ? `已更新为 ${dorm.name}。` : `提交成功，已选择 ${dorm.name}。`);
+        form.reset();
+        document.querySelector("#studentGender").value = activeGender;
+        await refreshData();
+      } catch (error) {
+        handleError(error);
+      }
+    }
+
+    function countDorm(dormId) {
+      return state.records.filter((record) => record.dormId === dormId).length;
+    }
+
+    async function refreshData({ silent = false } = {}) {
+      if (!isSupabaseConfigured()) {
+        state = { dorms: structuredClone(defaultDorms), records: [] };
+        render();
+        setSyncStatus("请先填写 Supabase 地址和 anon key。");
+        return;
+      }
+
+      if (isRefreshing) return;
+      isRefreshing = true;
+      if (!silent) setSyncStatus("正在同步在线数据...");
+
       try {
         const [dormRows, recordRows] = await Promise.all([
           db("dorms?select=*&order=name.asc"),
