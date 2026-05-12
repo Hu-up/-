@@ -579,8 +579,8 @@
                     </select>
                   </label>
                   <label>
-                    联系方式或学号
-                    <input id="studentId" required placeholder="用于避免重复提交">
+                    学号
+                    <input id="studentId" required inputmode="numeric" pattern="120242227[0-9]{3}" maxlength="12" placeholder="例如：120242227001">
                   </label>
                 </div>
                 <div class="notice">填完个人信息后，在右侧点击宿舍卡片即可提交或更新选择。</div>
@@ -607,17 +607,17 @@
 
   <script>
     const SUPABASE_URL = "https://kzyxwnvjhojzayregxgc.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_SEzzFIpvvqv8fLvtphWfdA_8pnzVdQM";
-    const REFRESH_INTERVAL_MS = 5000;
+    const SUPABASE_ANON_KEY = "sb_publishable_SEzzFIpvvaq8fLvtphWf4A_8pnzVdQM";
+    const REFRESH_INTERVAL_MS = 15000;
 
     const defaultDorms = [
-      ...Array.from({ length: 15 }, (_, index) => ({
+      ...Array.from({ length: 32 }, (_, index) => ({
         id: `m-${index + 1}`,
         name: `男生 ${String(index + 1).padStart(2, "0")} 宿舍`,
         gender: "男",
         capacity: 4
       })),
-      ...Array.from({ length: 10 }, (_, index) => ({
+      ...Array.from({ length: 21 }, (_, index) => ({
         id: `f-${index + 1}`,
         name: `女生 ${String(index + 1).padStart(2, "0")} 宿舍`,
         gender: "女",
@@ -675,11 +675,13 @@
       const usedBeds = state.records.length;
       const maleRecords = state.records.filter((item) => item.gender === "男").length;
       const femaleRecords = state.records.filter((item) => item.gender === "女").length;
+      const maleBeds = state.dorms.filter((item) => item.gender === "男").reduce((sum, dorm) => sum + Number(dorm.capacity), 0);
+      const femaleBeds = state.dorms.filter((item) => item.gender === "女").reduce((sum, dorm) => sum + Number(dorm.capacity), 0);
       const stats = [
         ["总床位", totalBeds],
         ["剩余床位", Math.max(totalBeds - usedBeds, 0)],
-        ["男生已选", `${maleRecords} / 60`],
-        ["女生已选", `${femaleRecords} / 40`]
+        ["男生已选", `${maleRecords} / ${maleBeds}`],
+        ["女生已选", `${femaleRecords} / ${femaleBeds}`]
       ];
 
       els.stats.innerHTML = stats.map(([label, value]) => `
@@ -742,6 +744,11 @@
       const studentId = document.querySelector("#studentId").value.trim();
       const dorm = state.dorms.find((item) => item.id === dormId);
 
+      if (!/^120242227\d{3}$/.test(studentId)) {
+        showToast("学号格式应为 120242227xxx，例如 120242227001。");
+        return;
+      }
+
       if (!dorm) {
         showToast("没有找到这个宿舍。");
         return;
@@ -768,6 +775,17 @@
 
         if (result.status === "gender_mismatch") {
           showToast("请在对应性别页面选择宿舍。");
+          await refreshData();
+          return;
+        }
+
+        if (result.status === "invalid_student_id") {
+          showToast("学号格式应为 120242227xxx，例如 120242227001。");
+          return;
+        }
+
+        if (result.status === "duplicate_student_id") {
+          showToast("这个学号已经被其他姓名使用，请检查后再提交。");
           await refreshData();
           return;
         }
